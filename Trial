@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K3 By Bharat Savaliya</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --bundle-1: #ffffff;
+            --bundle-2: #eaf4f8;
+            --text-dark: #333;
+            --text-light: #fff;
+            --border: #ccc;
+            --positive: #27ae60;
+            --negative: #c0392b;
+            --positive-light: #2ecc71; 
+            --negative-light: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Dashboard full screen layout */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f4f6f7;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-light);
+            padding: 15px 20px 10px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 15px 0;
+            font-size: 26px;
+            letter-spacing: 1px;
+        }
+
+        /* Controls Section */
+        .controls-container {
+            background-color: var(--secondary);
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-light);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            text-align: left;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #bdc3c7;
+        }
+
+        .controls-container input[type="number"] {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 110px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .player-selector {
+            display: flex;
+            gap: 15px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background 0.2s;
+            height: fit-content;
+            align-self: flex-end;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Table Section */
+        .table-wrapper {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            text-align: center;
+            min-width: 100px;
+        }
+
+        /* Sticky Header */
+        thead th {
+            position: sticky;
+            top: 0;
+            background-color: var(--primary);
+            color: white;
+            padding: 10px;
+            z-index: 5;
+        }
+
+        /* Editable Player Names */
+        .player-name-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            font-size: 17px;
+            outline: none;
+            padding: 5px;
+        }
+        
+        .player-name-input:focus {
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+
+        /* Row Color Bundling (6 rows per bundle) */
+        .bundle-even { background-color: var(--bundle-1); }
+        .bundle-odd { background-color: var(--bundle-2); }
+
+        /* Clickable Score Cells */
+        .score-cell {
+            padding: 0;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .score-cell:hover {
+            background-color: rgba(52, 152, 219, 0.15);
+        }
+
+        .score-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 45px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Sticky Footer for Totals */
+        tfoot th {
+            position: sticky;
+            bottom: 0;
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 10px;
+            font-size: 22px;
+            z-index: 5;
+            transition: color 0.2s;
+        }
+        
+        .round-label {
+            font-weight: bold;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>K3 By Bharat Savaliya</h1>
+        
+        <!-- Controls for submitting scores -->
+        <div class="controls-container">
+            <div class="control-group">
+                <label>Target Round #</label>
+                <input type="number" id="targetRound" value="1" min="1">
+            </div>
+            
+            <div class="control-group">
+                <label>Score</label>
+                <input type="number" id="scoreValue" placeholder="e.g. 50 or -10">
+            </div>
+
+            <div class="control-group">
+                <label>Select Players</label>
+                <div class="player-selector" id="playerCheckboxes">
+                    <!-- Checkboxes generated by JS -->
+                </div>
+            </div>
+
+            <button onclick="submitScore()">Submit Score</button>
+            <button onclick="addRound()" style="background-color: #27ae60;">+ Add Round manually</button>
+        </div>
+    </header>
+
+    <div class="table-wrapper">
+        <table id="scoreboard">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Round</th>
+                    <!-- Player headers will be generated by JS -->
+                </tr>
+            </thead>
+            <tbody id="scoreBody">
+                <!-- Rows generated by JS -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>TOTAL</th>
+                    <!-- Totals generated by JS -->
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        const NUM_PLAYERS = 6;
+        let totalRounds = 0;
+        let playerNames = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"];
+
+        // Initialize Application
+        function init() {
+            setupHeadersAndFooters();
+            updateCheckboxes();
+            
+            // Generate initial 6 rounds
+            for(let i = 0; i < 6; i++) {
+                addRound();
+            }
+        }
+
+        // Setup Table Headers and Footer Totals
+        function setupHeadersAndFooters() {
+            const theadTr = document.querySelector('#scoreboard thead tr');
+            const tfootTr = document.querySelector('#scoreboard tfoot tr');
+            
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                // Header (Editable Name)
+                const th = document.createElement('th');
+                th.innerHTML = `<input type="text" class="player-name-input" id="p${i}-name" value="${playerNames[i]}" oninput="syncPlayerNames(${i})">`;
+                theadTr.appendChild(th);
+
+                // Footer (Total)
+                const tf = document.createElement('th');
+                tf.id = `total-p${i}`;
+                tf.innerText = "0";
+                tfootTr.appendChild(tf);
+            }
+        }
+
+        // Sync edited names in header to the checkbox labels
+        function syncPlayerNames(index) {
+            const inputVal = document.getElementById(`p${index}-name`).value;
+            playerNames[index] = inputVal || `Player ${index + 1}`;
+            document.getElementById(`label-p${index}`).innerText = playerNames[index];
+        }
+
+        // Create player checkboxes in the control bar
+        function updateCheckboxes() {
+            const container = document.getElementById('playerCheckboxes');
+            container.innerHTML = '';
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                container.innerHTML += `
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="check-p${i}" value="${i}">
+                        <span id="label-p${i}">${playerNames[i]}</span>
+                    </label>
+                `;
+            }
+        }
+
+        // Add a new round row
+        function addRound() {
+            totalRounds++;
+            const tbody = document.getElementById('scoreBody');
+            const tr = document.createElement('tr');
+            
+            // Rows colour to be changed after bundle of six rows
+            const bundleIndex = Math.floor((totalRounds - 1) / 6);
+            tr.className = bundleIndex % 2 === 0 ? 'bundle-even' : 'bundle-odd';
+
+            // Round Number Column
+            let html = `<td class="round-label">Round ${totalRounds}</td>`;
+            
+            // Player Score Columns (Clickable to Edit)
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                html += `
+                    <td class="score-cell" onclick="askForEdit(${i}, ${totalRounds})">
+                        <span class="score-display" data-value="" data-player="${i}" data-round="${totalRounds}"></span>
+                    </td>
+                `;
+            }
+            
+            tr.innerHTML = html;
+            tbody.appendChild(tr);
+        }
+
+        // Submit Score from Top Dashboard
+        function submitScore() {
+            const targetRound = parseInt(document.getElementById('targetRound').value);
+            const scoreValue = document.getElementById('scoreValue').value;
+
+            if (!targetRound || targetRound < 1) {
+                alert("Please enter a valid round number.");
+                return;
+            }
+            if (scoreValue === "") {
+                alert("Please enter a score.");
+                return;
+            }
+
+            // Auto-create rows if target round doesn't exist yet
+            while (totalRounds < targetRound) {
+                addRound();
+            }
+
+            let playersSelected = false;
+
+            // Apply score to checked players for the targeted round
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                const checkbox = document.getElementById(`check-p${i}`);
+                if (checkbox.checked) {
+                    playersSelected = true;
+                    setCellScore(i, targetRound, scoreValue);
+                }
+            }
+
+            if (!playersSelected) {
+                alert("Please select at least one player to assign the score to.");
+                return;
+            }
+
+            // Uncheck boxes and clear score after successful submission
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                document.getElementById(`check-p${i}`).checked = false;
+            }
+            document.getElementById('scoreValue').value = '';
+            document.getElementById('scoreValue').focus(); // Keep focus for quick entry
+
+            // Recalculate totals immediately
+            calculateTotals();
+            
+            // Check if we need to auto-advance the round
+            checkAutoAdvance(targetRound);
+        }
+
+        // Feature: Ask for Edit when clicking a specific score cell
+        function askForEdit(playerIndex, roundNum) {
+            const span = document.querySelector(`.score-display[data-player="${playerIndex}"][data-round="${roundNum}"]`);
+            const currentVal = span.getAttribute('data-value');
+            const playerName = playerNames[playerIndex];
+            
+            // Ask user for the new score
+            const newVal = prompt(`Edit score for ${playerName} (Round ${roundNum}):`, currentVal);
+            
+            if (newVal !== null) { // if user didn't hit 'Cancel'
+                if (newVal.trim() === "" || !isNaN(parseInt(newVal))) {
+                    setCellScore(playerIndex, roundNum, newVal);
+                    calculateTotals();
+                    checkAutoAdvance(roundNum);
+                } else {
+                    alert("Invalid entry. Please enter a number.");
+                }
+            }
+        }
+
+        // Helper to update a single cell's data and UI
+        function setCellScore(playerIndex, roundNum, value) {
+            const span = document.querySelector(`.score-display[data-player="${playerIndex}"][data-round="${roundNum}"]`);
+            if (span) {
+                span.setAttribute('data-value', value);
+                span.innerText = value;
+                updateColor(span, value);
+            }
+        }
+
+        // Feature: Once score is entered for all players, move to next round
+        function checkAutoAdvance(roundNum) {
+            let allFilled = true;
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                const span = document.querySelector(`.score-display[data-player="${i}"][data-round="${roundNum}"]`);
+                if (!span || span.getAttribute('data-value') === "") {
+                    allFilled = false;
+                    break;
+                }
+            }
+
+            // If all 6 players have a score in this round, advance the input
+            if (allFilled) {
+                const targetInput = document.getElementById('targetRound');
+                if (parseInt(targetInput.value) === roundNum) {
+                    const nextRound = roundNum + 1;
+                    targetInput.value = nextRound;
+                    
+                    // Create the physical row for the next round if it doesn't exist yet
+                    while (totalRounds < nextRound) {
+                        addRound();
+                    }
+                }
+            }
+        }
+
+        // Feature: Positive = Green, Negative = Red
+        function updateColor(element, value) {
+            const val = parseInt(value);
+            if (!isNaN(val)) {
+                if (val > 0) {
+                    element.style.color = "var(--positive)";
+                } else if (val < 0) {
+                    element.style.color = "var(--negative)";
+                } else {
+                    element.style.color = "var(--text-dark)"; // 0 is default text color
+                }
+            } else {
+                element.style.color = "var(--text-dark)";
+            }
+        }
+
+        // Calculate Totals for the bottom sticky row
+        function calculateTotals() {
+            for (let i = 0; i < NUM_PLAYERS; i++) {
+                let sum = 0;
+                // Get all score spans for this specific player
+                const playerSpans = document.querySelectorAll(`.score-display[data-player="${i}"]`);
+                
+                playerSpans.forEach(span => {
+                    const val = span.getAttribute('data-value');
+                    if (val !== "") {
+                        sum += parseInt(val);
+                    }
+                });
+                
+                // Update footer total and color
+                const totalElement = document.getElementById(`total-p${i}`);
+                totalElement.innerText = sum;
+                
+                if (sum > 0) {
+                    totalElement.style.color = "var(--positive-light)";
+                } else if (sum < 0) {
+                    totalElement.style.color = "var(--negative-light)";
+                } else {
+                    totalElement.style.color = "white";
+                }
+            }
+        }
+
+        // Boot up
+        window.onload = init;
+    </script>
+</body>
+</html>
